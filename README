@@ -1,0 +1,15 @@
+README
+
+Fetch a page of discussion threads from Hacker News by ID, and convert
+it to Org.
+
+For example, given this URL:
+
+https://news.ycombinator.com/item?id=10879529
+
+Issue this command:
+
+$ hn2org 10879529 > /path/to/file.org
+
+Open up `file.org` in Emacs, and enjoy reading threaded comments in an
+interface that actually supports them in a sane fashion.
