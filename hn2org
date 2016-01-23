@@ -1,0 +1,169 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.016;
+use LWP::Simple;
+use JSON;
+
+die "hn2org ITEM-ID\n" unless scalar @ARGV >= 1;
+my $item_id = shift @ARGV;
+binmode STDOUT, ':encoding(UTF-8)';
+
+sub get_item_at_url {
+  # URL -> HashRef
+  my $item_url = shift;
+  sleep 1;
+  my $content = get $item_url;
+  my $decoded_data = decode_json($content);
+}
+
+sub make_item_url {
+  # Int -> URL
+  my $item_id	= shift;
+  my $base_url	= "https://hacker-news.firebaseio.com/v0/item";
+  my $item_url	= "$base_url/$item_id";
+  my $suffix	= ".json";
+  return $item_url . $suffix;
+}
+
+our $Story = {};
+
+sub build_story_hash {
+  # Int -> HashRef IO!
+  my $item_id = shift;
+  my $url = make_item_url($item_id);
+  my $item = get_item_at_url($url);
+
+  if ($item->{type} eq 'story') {
+    my $root_id = $item->{id};
+    my $title = $item->{title};
+    my $url = $item->{url};
+    $Story->{root}->{id} = $root_id;
+    $Story->{root}->{title} = $title;
+    $Story->{root}->{url} = $url;
+  }
+
+  if (defined $item->{text}) {
+    $Story->{$item_id}->{text} = $item->{text};
+  }
+  if (defined $item->{parent}) {
+    $Story->{$item_id}->{parent} = $item->{parent};
+  }
+  if (defined $item->{by}) {
+    $Story->{$item_id}->{by} = $item->{by};
+  }
+  if (defined $item->{kids}) {
+    my $kids = $item->{kids};
+    $Story->{$item_id}->{kids} = $kids;
+    for my $child_id (@$kids) {
+      __SUB__->($child_id);
+    }
+  }
+}
+
+sub make_story_title {
+  # HashRef -> String
+  my $story = shift;
+  my $root_id = $story->{root}->{id};
+  my $story_title = $story->{root}->{title};
+  my $story_url = $story->{root}->{url};
+
+  my $template = <<"EOF";
+* $story_title
+:PROPERTIES:
+:URL: $story_url
+:END:
+
+EOF
+}
+
+sub clean_text {
+  # String -> String
+  my $text = shift;
+  if (defined $text) {
+    $text =~ s!\n$!\n\n!g;
+    $text =~ s/<p>/\n/g;
+    $text =~ s/<[^>]*>//g;
+    $text =~ s{&#x27;}{'}g;
+    $text =~ s{&#x2F;}{/}g;
+    $text =~ s{&gt;}{>}g;
+    $text =~ s{&lt;}{<}g;
+    $text =~ s{&amp;}{&}g;
+    $text =~ s{&quot;}{"}g;
+    $text =~ s{\* }{- }g;
+    return $text;
+  }
+  else {
+    return "";
+  }
+}
+
+sub print_comments {
+  # HashRef -> String
+  my $story = shift;
+  my $root_id = $story->{root}->{id};
+  _print_comments($root_id, 2);
+}
+
+sub _print_comments {
+  # Int -> IO!
+  my ($id, $depth) = @_;
+
+  my $item = $Story->{$id};
+  my $kids = $item->{kids};
+  my $header = '*' x $depth;
+  my $indent = ' ' x ($depth + 1);
+
+  my $commenter = $item->{by};
+  my $raw_text = $item->{text};
+  my $clean_text = clean_text($raw_text);
+
+  my $template;
+
+  if (defined $commenter && defined $clean_text) {
+    $template = "$header commenter: $commenter\n\n$indent$clean_text\n\n";
+  }
+  else {
+    $template = "";
+  }
+  print $template;
+
+  if (defined $kids) {
+    for my $kid_id (@$kids) {
+      __SUB__->($kid_id, $depth + 1);
+    }
+  }
+}
+
+build_story_hash($item_id);
+my $story_title = make_story_title($Story);
+print "# -*- Mode: Org -*-\n";
+print $story_title;
+print_comments($Story);
+
+__END__
+
+$ hn2org ID > /tmp/HN-ID.org
+
+For more information, see 'https://github.com/HackerNews/API'
+
+
+    Story
+   /  \  \
+  A    B  C
+  |       | \
+  D       E  F
+
+
+To get D:
+
+  Story{A}->{D}
+
+This will become:
+
+* Story
+
+** A
+
+** D
