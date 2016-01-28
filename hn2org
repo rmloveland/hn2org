@@ -3,14 +3,18 @@
 use strict;
 use warnings;
 use 5.016;
-use LWP::Simple;
+use LWP::UserAgent;
 use JSON;
 
 die "hn2org URL\n" unless scalar @ARGV >= 1;
 my $thread_url = shift @ARGV;
 binmode STDOUT, ':encoding(UTF-8)';
 
+my $ua = LWP::UserAgent->new;
+$ua->timeout(10);
+
 sub extract_item_id {
+  # String -> String
   my $thread_url = shift;
   my $retval;
   # https://news.ycombinator.com/item?id=10956889
@@ -22,11 +26,17 @@ sub extract_item_id {
 }
 
 sub get_item_at_url {
-  # URL -> HashRef
+  # URL -> HashRef || Undef
   my $item_url = shift;
-  sleep 1;
-  my $content = get $item_url;
-  my $decoded_data = decode_json($content);
+  my $response = $ua->get($item_url);
+  my $rv;
+  if ($response->is_success) {
+    $rv = decode_json($response->decoded_content);
+  }
+  else {
+    $rv = __SUB__->($item_url);
+  }
+  return $rv;
 }
 
 sub make_item_url {
@@ -46,7 +56,7 @@ sub build_story_hash {
   my $url = make_item_url($item_id);
   my $item = get_item_at_url($url);
 
-  if ($item->{type} eq 'story') {
+  if (defined $item->{type} && $item->{type} eq 'story') {
     my $root_id = $item->{id};
     my $title = $item->{title};
     my $url = $item->{url};
