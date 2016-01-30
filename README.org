@@ -1,0 +1,34 @@
+#+title: README
+#+author: Rich Loveland
+#+email: r@rmloveland.com
+#+options: toc:nil
+
+* Overview
+
+  This is a script that fetches a discussion thread from Hacker News
+  using its [[https://github.com/HackerNews/API][API]], and converts it to [[http://orgmode.org][Org]] mode for convenient reading
+  from [[http://www.gnu.org/software/emacs/][Emacs]].
+
+  NOTE: This is a "first draft", and it's rather slow due to
+  inefficient network usage, this should be improved in the future.
+
+* Usage
+
+  For example, given this URL:
+
+  https://news.ycombinator.com/item?id=10879529
+
+  run this command in your terminal:
+
+  #+BEGIN_SRC text
+  $ hn2org 'https://news.ycombinator.com/item?id=10879529' > /path/to/file.org
+  #+END_SRC
+
+  Now you can open up =file.org= in Emacs, and enjoy reading HN
+  comments with per-thread folding and unfolding.  In particular,
+  reading deeply nested subthreads is much easier than on the website.
+
+* Prerequisites
+
+  - Perl version 5.16 or higher
+  - The [[https://metacpan.org/pod/JSON][JSON]] module (available from CPAN)
