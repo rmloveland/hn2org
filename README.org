@@ -33,3 +33,7 @@
 
   - Perl version 5.16 or higher
   - The [[https://metacpan.org/pod/JSON][JSON]] module (available from CPAN)
+
+* License
+
+  This code is available under the same license as Perl 5.
