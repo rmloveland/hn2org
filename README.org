@@ -9,8 +9,9 @@
   using its [[https://github.com/HackerNews/API][API]], and converts it to [[http://orgmode.org][Org]] mode for convenient reading
   from [[http://www.gnu.org/software/emacs/][Emacs]].
 
-  NOTE: This is a "first draft", and it's rather slow due to
-  inefficient network usage, this should be improved in the future.
+  NOTE: This is a "first draft", and it's very slow due to inefficient
+  (uneccesarily sequential) network usage; this should be improved.
+  You probably don't really want to use this.
 
 * Usage
 
