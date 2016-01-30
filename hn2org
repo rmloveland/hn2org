@@ -128,7 +128,7 @@ sub print_comments {
 }
 
 sub _print_comments {
-  # Int -> IO!
+  # Int Int -> IO!
   my ($id, $depth) = @_;
 
   my $item = $Story->{$id};
@@ -151,7 +151,7 @@ $header $commenter
 :REPLY_URL: https://news.ycombinator.com/reply?id=$id&goto=item%3Fid%3D$thread_id
 :END:
 
-$indent$clean_text
+$clean_text
 
 EOF
   }
