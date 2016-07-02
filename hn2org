@@ -27,6 +27,7 @@ sub extract_item_id {
 
 sub get_item_at_url {
   # URL -> HashRef || Undef
+  no warnings 'recursion';
   my $item_url = shift;
   my $response = $ua->get($item_url);
   my $rv;
